@@ -24,6 +24,8 @@ _load_attempted_for: Optional[str] = None
 
 def load_embedding_model():
     global _model, _model_name, _load_attempted_for
+    if not settings.embedding_model_enabled:
+        return None
     if _load_attempted_for == settings.embedding_model_name:
         return _model
 

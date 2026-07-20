@@ -67,6 +67,14 @@ class Settings(BaseSettings):
     api_rate_limit_per_minute: int = 60
 
     # ── Embedding Model ──
+    # sentence-transformers + its PyTorch dependency is the single largest
+    # memory consumer in this app (several hundred MB once loaded) — on a
+    # memory-capped host (e.g. Render's free 512MB tier) it's often the
+    # difference between staying up and getting OOM-killed mid-request. Dedup
+    # already runs correctly without it (rule + LLM signals only, just
+    # without the embedding-similarity signal), so this is safe to disable
+    # entirely on constrained hosts rather than tuned away.
+    embedding_model_enabled: bool = True
     embedding_model_name: str = "all-MiniLM-L6-v2"
     embedding_cache_enabled: bool = True
 
