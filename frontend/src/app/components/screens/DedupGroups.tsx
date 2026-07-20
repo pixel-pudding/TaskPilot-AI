@@ -3,6 +3,7 @@ import { GitMerge, Sparkles, RefreshCw, AlertCircle, CheckCircle, HelpCircle } f
 import { Card } from "../shared/Card";
 import { MergedTaskCard } from "../shared/MergedTaskCard";
 import { getDedupGroups, DedupGroup } from "../../api/taskpilot";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 const CONFIDENCE_CUTOFFS = [
   { label: "High", min: 0.8, color: "#BFD78D", icon: CheckCircle },
@@ -11,6 +12,7 @@ const CONFIDENCE_CUTOFFS = [
 ];
 
 export function DedupGroups() {
+  const isMobile = useIsMobile();
   const [groups, setGroups] = useState<DedupGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterConfidence, setFilterConfidence] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export function DedupGroups() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 14 }}>
         {categorized.map(({ label, color, icon: Icon, count }) => (
           <Card key={label} variant={label === "High" ? "green" : label === "Medium" ? "yellow" : "pink"} shadow>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>

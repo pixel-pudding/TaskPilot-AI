@@ -8,8 +8,10 @@ import { SourceBadge } from "../shared/SourceBadge";
 import { StatusPill } from "../shared/StatusPill";
 import { getPlan, getDashboard, reorderTasks, LeverageTask, RankedTask, DeferredTask, WebSocketEvent } from "../../api/taskpilot";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 export function Priorities() {
+  const isMobile = useIsMobile();
   const [ranked, setRanked] = useState<RankedTask[]>([]);
   const [leverage, setLeverage] = useState<LeverageTask[]>([]);
   const [deferred, setDeferred] = useState<DeferredTask[]>([]);
@@ -49,7 +51,7 @@ export function Priorities() {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
         <Card variant="green" shadow>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
             <TrendingUp size={14} /> <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif" }}>Highest Leverage Tasks</span>

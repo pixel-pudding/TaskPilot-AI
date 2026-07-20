@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Search, Bell, Settings, LogOut } from "lucide-react";
+import { Search, Bell, Settings, LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useLayout } from "./LayoutContext";
 import { useAuth } from "../../context/AuthContext";
 
 export function TopNav() {
   const navigate = useNavigate();
-  const { togglePanel } = useLayout();
+  const { togglePanel, isMobile, toggleSidebar } = useLayout();
   const { user, logout } = useAuth();
   const [searchVal, setSearchVal] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -28,54 +28,71 @@ export function TopNav() {
     <div style={{
       height: 60, flexShrink: 0,
       display: "flex", alignItems: "center",
-      gap: 12, padding: "0 16px",
+      gap: isMobile ? 8 : 12, padding: isMobile ? "0 10px" : "0 16px",
       borderBottom: "1px solid #E9E4D8",
       background: "#F6F2E9",
     }}>
+      {isMobile && (
+        <button
+          onClick={toggleSidebar}
+          aria-label="Open menu"
+          style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            border: "1px solid #E9E4D8", background: "#FFFFFF",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+          }}
+        >
+          <Menu size={16} color="#7A7A7A" />
+        </button>
+      )}
+
       <div style={{
-        flex: 1, display: "flex", alignItems: "center", gap: 8,
-        background: "#FFFFFF", borderRadius: 14, padding: "8px 14px",
-        border: "1px solid #E9E4D8", maxWidth: 480,
+        flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8,
+        background: "#FFFFFF", borderRadius: 14, padding: isMobile ? "8px 10px" : "8px 14px",
+        border: "1px solid #E9E4D8", maxWidth: isMobile ? undefined : 480,
       }}>
-        <Search size={15} color="#B0A8A0" />
+        <Search size={15} color="#B0A8A0" style={{ flexShrink: 0 }} />
         <input
           value={searchVal}
           onChange={(e) => setSearchVal(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          placeholder="Search tasks, emails, blockers..."
+          placeholder={isMobile ? "Search..." : "Search tasks, emails, blockers..."}
           style={{
-            flex: 1, border: "none", outline: "none",
+            flex: 1, minWidth: 0, border: "none", outline: "none",
             background: "none", fontSize: 13, color: "#111111",
           }}
         />
       </div>
 
       {user?.id === "demo" && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 10, flexShrink: 0 }}>
           <span style={{
             background: "#F5D66E", color: "#0D0D0D", fontSize: 11, fontWeight: 700,
-            padding: "6px 12px", borderRadius: 10, fontFamily: "'IBM Plex Mono', monospace",
-            textTransform: "uppercase", letterSpacing: "0.04em",
+            padding: isMobile ? "6px 8px" : "6px 12px", borderRadius: 10, fontFamily: "'IBM Plex Mono', monospace",
+            textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap",
           }}>
-            Demo Mode — shared showcase data
+            {isMobile ? "Demo" : "Demo Mode — shared showcase data"}
           </span>
-          <button
-            onClick={() => navigate("/signup")}
-            style={{
-              background: "#0D0D0D", color: "#FFFFFF", border: "none",
-              padding: "8px 14px", borderRadius: 10, fontSize: 12, fontWeight: 600,
-              cursor: "pointer", fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "nowrap",
-            }}
-          >
-            Sign up for your own data
-          </button>
+          {!isMobile && (
+            <button
+              onClick={() => navigate("/signup")}
+              style={{
+                background: "#0D0D0D", color: "#FFFFFF", border: "none",
+                padding: "8px 14px", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                cursor: "pointer", fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "nowrap",
+              }}
+            >
+              Sign up for your own data
+            </button>
+          )}
         </div>
       )}
 
       <button
         onClick={() => navigate("/notifications")}
         style={{
-          width: 36, height: 36, borderRadius: 10,
+          width: 36, height: 36, borderRadius: 10, flexShrink: 0,
           border: "1px solid #E9E4D8", background: "#FFFFFF",
           display: "flex", alignItems: "center", justifyContent: "center",
           cursor: "pointer", position: "relative",
@@ -84,19 +101,21 @@ export function TopNav() {
         <Bell size={16} color="#7A7A7A" />
       </button>
 
-      <button
-        onClick={() => navigate("/settings")}
-        style={{
-          width: 36, height: 36, borderRadius: 10,
-          border: "1px solid #E9E4D8", background: "#FFFFFF",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer",
-        }}
-      >
-        <Settings size={16} color="#7A7A7A" />
-      </button>
+      {!isMobile && (
+        <button
+          onClick={() => navigate("/settings")}
+          style={{
+            width: 36, height: 36, borderRadius: 10,
+            border: "1px solid #E9E4D8", background: "#FFFFFF",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+          }}
+        >
+          <Settings size={16} color="#7A7A7A" />
+        </button>
+      )}
 
-      <div style={{ position: "relative" }}>
+      <div style={{ position: "relative", flexShrink: 0 }}>
         <div
           onClick={() => setMenuOpen((v) => !v)}
           style={{

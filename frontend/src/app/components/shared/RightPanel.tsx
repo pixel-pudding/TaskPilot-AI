@@ -10,60 +10,20 @@ const SUGGESTIONS = [
   "Any urgent tasks?",
 ];
 
-export function RightPanel() {
-  const [input, setInput] = useState("");
-  const { panelOpen, togglePanel } = useLayout();
-  const [greeting, setGreeting] = useState("Ask me anything about your tasks.");
-  const [messages, setMessages] = useState<{ role: "assistant" | "user"; text: string }[]>([
-    { role: "assistant", text: greeting },
-  ]);
-  const [sending, setSending] = useState(false);
+type Message = { role: "assistant" | "user"; text: string };
 
-  useEffect(() => {
-    if (!panelOpen) return;
-    getPlan().then(p => {
-      const h = new Date().getHours();
-      const timeGreeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-      const count = p.ranked_tasks?.length ?? 0;
-      const top = p.top_priorities?.[0];
-      const msg = top
-        ? `${timeGreeting}! You have ${count} tasks. Your top priority is "${top.title}".`
-        : `${timeGreeting}! You have ${count} tasks tracked.`;
-      setGreeting(msg);
-      setMessages([{ role: "assistant", text: msg }]);
-    }).catch(() => {
-      setMessages([{ role: "assistant", text: greeting }]);
-    });
-  }, [panelOpen]);
-
-  const handleSend = async () => {
-    const q = input.trim();
-    if (!q || sending) return;
-    setMessages(prev => [...prev, { role: "user", text: q }]);
-    setInput("");
-    setSending(true);
-    try {
-      const res: ChatResponse = await chat(q);
-      setMessages(prev => [...prev, { role: "assistant", text: res.answer }]);
-    } catch {
-      setMessages(prev => [...prev, { role: "assistant", text: "Sorry, I couldn't process that request." }]);
-    } finally {
-      setSending(false);
-    }
-  };
-
+function PanelContent({
+  messages, sending, input, setInput, onSend, onClose,
+}: {
+  messages: Message[];
+  sending: boolean;
+  input: string;
+  setInput: (v: string) => void;
+  onSend: () => void;
+  onClose: () => void;
+}) {
   return (
-    <div style={{
-      width: panelOpen ? 340 : 0, flexShrink: 0, height: "100%",
-      overflow: "hidden", transition: "width 0.25s ease",
-      borderLeft: panelOpen ? "1px solid #E9E4D8" : "none",
-      background: "#FFFDF8",
-    }}>
-      <div style={{
-        width: 340, height: "100%",
-        display: "flex", flexDirection: "column",
-        overflow: "hidden",
-      }}>
+    <div style={{ width: 340, maxWidth: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{
         padding: "16px 18px", borderBottom: "1px solid #E9E4D8",
         display: "flex", alignItems: "center", gap: 8,
@@ -72,7 +32,7 @@ export function RightPanel() {
         <span style={{ fontWeight: 600, fontSize: 14, fontFamily: "'Space Grotesk', sans-serif", flex: 1 }}>
           AI Assistant
         </span>
-        <button onClick={togglePanel}
+        <button onClick={onClose}
           style={{ background: "none", border: "none", cursor: "pointer", color: "#7A7A7A", display: "flex", padding: 0 }}>
           <PanelRightClose size={15} />
         </button>
@@ -129,7 +89,7 @@ export function RightPanel() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          onKeyDown={(e) => e.key === "Enter" && onSend()}
           placeholder="Ask me anything..."
           style={{
             flex: 1, border: "1px solid #E9E4D8", borderRadius: 12,
@@ -137,7 +97,7 @@ export function RightPanel() {
             background: "#FFFFFF", color: "#111111",
           }}
         />
-        <button onClick={handleSend} disabled={sending || !input.trim()}
+        <button onClick={onSend} disabled={sending || !input.trim()}
           style={{
             width: 36, height: 36, borderRadius: 10,
             background: input.trim() && !sending ? "#0D0D0D" : "#E9E4D8",
@@ -149,7 +109,80 @@ export function RightPanel() {
           {sending ? <Loader2 size={14} color="#FFFFFF" /> : <Send size={14} color={input.trim() ? "#FFFFFF" : "#B0A8A0"} />}
         </button>
       </div>
-      </div>
+    </div>
+  );
+}
+
+export function RightPanel() {
+  const [input, setInput] = useState("");
+  const { panelOpen, togglePanel, isMobile } = useLayout();
+  const [greeting, setGreeting] = useState("Ask me anything about your tasks.");
+  const [messages, setMessages] = useState<Message[]>([
+    { role: "assistant", text: greeting },
+  ]);
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (!panelOpen) return;
+    getPlan().then(p => {
+      const h = new Date().getHours();
+      const timeGreeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+      const count = p.ranked_tasks?.length ?? 0;
+      const top = p.top_priorities?.[0];
+      const msg = top
+        ? `${timeGreeting}! You have ${count} tasks. Your top priority is "${top.title}".`
+        : `${timeGreeting}! You have ${count} tasks tracked.`;
+      setGreeting(msg);
+      setMessages([{ role: "assistant", text: msg }]);
+    }).catch(() => {
+      setMessages([{ role: "assistant", text: greeting }]);
+    });
+  }, [panelOpen]);
+
+  const handleSend = async () => {
+    const q = input.trim();
+    if (!q || sending) return;
+    setMessages(prev => [...prev, { role: "user", text: q }]);
+    setInput("");
+    setSending(true);
+    try {
+      const res: ChatResponse = await chat(q);
+      setMessages(prev => [...prev, { role: "assistant", text: res.answer }]);
+    } catch {
+      setMessages(prev => [...prev, { role: "assistant", text: "Sorry, I couldn't process that request." }]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (isMobile) {
+    if (!panelOpen) return null;
+    return (
+      <>
+        <div
+          onClick={togglePanel}
+          aria-hidden="true"
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200 }}
+        />
+        <div style={{
+          position: "fixed", top: 0, right: 0, bottom: 0, width: 340, maxWidth: "88vw",
+          zIndex: 201, background: "#FFFDF8", borderLeft: "1px solid #E9E4D8",
+          boxShadow: "-8px 0 24px rgba(0,0,0,0.12)",
+        }}>
+          <PanelContent messages={messages} sending={sending} input={input} setInput={setInput} onSend={handleSend} onClose={togglePanel} />
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div style={{
+      width: panelOpen ? 340 : 0, flexShrink: 0, height: "100%",
+      overflow: "hidden", transition: "width 0.25s ease",
+      borderLeft: panelOpen ? "1px solid #E9E4D8" : "none",
+      background: "#FFFDF8",
+    }}>
+      <PanelContent messages={messages} sending={sending} input={input} setInput={setInput} onSend={handleSend} onClose={togglePanel} />
     </div>
   );
 }

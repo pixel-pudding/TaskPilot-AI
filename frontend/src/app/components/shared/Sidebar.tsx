@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
   LayoutDashboard, Inbox, CalendarRange, Sparkles, ListChecks,
@@ -25,12 +25,119 @@ const NAV_ITEMS = [
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 
+type ConnectorSummary = { connected: number; total: number; lastSync: string | null };
+
+function SidebarContent({
+  expanded, onLogoClick, onNav, activePath, onTogglePanel, panelOpen, connectors,
+}: {
+  expanded: boolean;
+  onLogoClick: () => void;
+  onNav: (path: string) => void;
+  activePath: string;
+  onTogglePanel: () => void;
+  panelOpen: boolean;
+  connectors: ConnectorSummary;
+}) {
+  return (
+    <>
+      <button onClick={onLogoClick}
+        style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px 24px", background: "none", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 10,
+          background: "#FFFFFF", display: "flex",
+          alignItems: "center", justifyContent: "center", flexShrink: 0,
+        }}>
+          <SquarePen size={16} color="#0D0D0D" />
+        </div>
+        {expanded && <span style={{
+          color: "#FFFFFF", fontWeight: 700, fontSize: 16,
+          fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em",
+        }}>
+          TaskPilot
+        </span>}
+      </button>
+
+      {expanded && NAV_ITEMS.map((item) => {
+        const isActive = activePath === item.path;
+        const Icon = item.icon;
+        return (
+          <button
+            key={item.path}
+            onClick={() => onNav(item.path)}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 12px", borderRadius: 12,
+              background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
+              border: "none", cursor: "pointer",
+              color: isActive ? "#FFFFFF" : "#7A7A7A",
+              fontSize: 13, fontWeight: isActive ? 500 : 400,
+              textAlign: "left", width: "100%",
+              transition: "all 0.15s",
+            }}
+          >
+            <Icon size={16} />
+            {item.label}
+          </button>
+        );
+      })}
+
+      <div style={{ flex: 1 }} />
+
+      {expanded && (
+        <>
+          <button onClick={onTogglePanel}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 12px", borderRadius: 12, width: "100%",
+              background: panelOpen ? "rgba(255,255,255,0.1)" : "transparent",
+              border: "none", cursor: "pointer", textAlign: "left",
+              color: panelOpen ? "#FFFFFF" : "#7A7A7A",
+              fontSize: 13, fontWeight: panelOpen ? 500 : 400,
+              transition: "all 0.15s",
+            }}>
+            <Bot size={16} />
+            AI Assistant
+          </button>
+          <button onClick={() => onNav("/traces")}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 12px", borderRadius: 12, width: "100%",
+              background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
+              color: "#7A7A7A", fontSize: 13, fontWeight: 400, transition: "all 0.15s",
+            }}>
+            <Activity size={16} />
+            Pipeline Traces
+          </button>
+          <A2AStatus />
+          <div style={{
+            padding: "12px", borderRadius: 12, marginTop: 4,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: connectors.connected > 0 ? "#BFD78D" : "#F7C5E6" }} />
+              <span style={{ color: "#BFD78D", fontSize: 12, fontWeight: 500 }}>
+                {connectors.connected}/{connectors.total} sources synced
+              </span>
+            </div>
+            <div style={{ color: "#7A7A7A", fontSize: 11 }}>
+              {connectors.lastSync
+                ? `Last sync: ${new Date(connectors.lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ago`
+                : "No sync data"}
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sidebarOpen, toggleSidebar, togglePanel, panelOpen } = useLayout();
+  const { sidebarOpen, toggleSidebar, setSidebarOpen, togglePanel, panelOpen, isMobile } = useLayout();
   const w = sidebarOpen ? 240 : 60;
-  const [connectors, setConnectors] = useState<{ connected: number; total: number; lastSync: string | null }>({ connected: 0, total: 0, lastSync: null });
+  const [connectors, setConnectors] = useState<ConnectorSummary>({ connected: 0, total: 0, lastSync: null });
 
   useEffect(() => {
     getHealth().then(h => {
@@ -43,6 +150,44 @@ export function Sidebar() {
     }).catch(() => {});
   }, []);
 
+  const handleNav = (path: string) => {
+    navigate(path);
+    // Standard drawer UX: picking a destination closes the overlay instead
+    // of leaving it open on top of the page you just navigated to.
+    if (isMobile) setSidebarOpen(false);
+  };
+
+  if (isMobile) {
+    return (
+      <>
+        {sidebarOpen && (
+          <div
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200 }}
+          />
+        )}
+        <div style={{
+          position: "fixed", top: 0, left: 0, bottom: 0, width: 240,
+          transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.25s ease", zIndex: 201,
+          background: "#0D0D0D", overflow: "auto",
+          display: "flex", flexDirection: "column", padding: "20px 12px", gap: 2,
+        }}>
+          <SidebarContent
+            expanded
+            onLogoClick={() => setSidebarOpen(false)}
+            onNav={handleNav}
+            activePath={location.pathname}
+            onTogglePanel={() => { togglePanel(); setSidebarOpen(false); }}
+            panelOpen={panelOpen}
+            connectors={connectors}
+          />
+        </div>
+      </>
+    );
+  }
+
   return (
     <div style={{
       width: w, flexShrink: 0, height: "100%",
@@ -54,94 +199,15 @@ export function Sidebar() {
         display: "flex", flexDirection: "column",
         padding: "20px 12px", gap: 2, overflow: "auto",
       }}>
-        <button onClick={toggleSidebar}
-          style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px 24px", background: "none", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 10,
-            background: "#FFFFFF", display: "flex",
-            alignItems: "center", justifyContent: "center", flexShrink: 0,
-          }}>
-            <SquarePen size={16} color="#0D0D0D" />
-          </div>
-          {sidebarOpen && <span style={{
-            color: "#FFFFFF", fontWeight: 700, fontSize: 16,
-            fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em",
-          }}>
-            TaskPilot
-          </span>}
-        </button>
-
-        {sidebarOpen && NAV_ITEMS.map((item) => {
-          const isActive = location.pathname === item.path;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 12px", borderRadius: 12,
-                background: isActive ? "rgba(255,255,255,0.1)" : "transparent",
-                border: "none", cursor: "pointer",
-                color: isActive ? "#FFFFFF" : "#7A7A7A",
-                fontSize: 13, fontWeight: isActive ? 500 : 400,
-                textAlign: "left", width: "100%",
-                transition: "all 0.15s",
-              }}
-            >
-              <Icon size={16} />
-              {item.label}
-            </button>
-          );
-        })}
-
-        <div style={{ flex: 1 }} />
-
-        {sidebarOpen && (
-          <>
-            <button onClick={togglePanel}
-              style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 12px", borderRadius: 12, width: "100%",
-                background: panelOpen ? "rgba(255,255,255,0.1)" : "transparent",
-                border: "none", cursor: "pointer", textAlign: "left",
-                color: panelOpen ? "#FFFFFF" : "#7A7A7A",
-                fontSize: 13, fontWeight: panelOpen ? 500 : 400,
-                transition: "all 0.15s",
-              }}>
-              <Bot size={16} />
-              AI Assistant
-            </button>
-            <button onClick={() => navigate("/traces")}
-              style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 12px", borderRadius: 12, width: "100%",
-                background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
-                color: "#7A7A7A", fontSize: 13, fontWeight: 400, transition: "all 0.15s",
-              }}>
-              <Activity size={16} />
-              Pipeline Traces
-            </button>
-            <A2AStatus />
-            <div style={{
-              padding: "12px", borderRadius: 12, marginTop: 4,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: connectors.connected > 0 ? "#BFD78D" : "#F7C5E6" }} />
-                <span style={{ color: "#BFD78D", fontSize: 12, fontWeight: 500 }}>
-                  {connectors.connected}/{connectors.total} sources synced
-                </span>
-              </div>
-              <div style={{ color: "#7A7A7A", fontSize: 11 }}>
-                {connectors.lastSync
-                  ? `Last sync: ${new Date(connectors.lastSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ago`
-                  : "No sync data"}
-              </div>
-            </div>
-          </>
-        )}
+        <SidebarContent
+          expanded={sidebarOpen}
+          onLogoClick={toggleSidebar}
+          onNav={handleNav}
+          activePath={location.pathname}
+          onTogglePanel={togglePanel}
+          panelOpen={panelOpen}
+          connectors={connectors}
+        />
       </div>
     </div>
   );

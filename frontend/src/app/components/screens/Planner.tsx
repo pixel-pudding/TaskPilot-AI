@@ -4,10 +4,12 @@ import { Card } from "../shared/Card";
 import { PriorityPill } from "../shared/PriorityPill";
 import { getPlan, getCalendarToday, DailyPlan, CalendarEvent, WebSocketEvent } from "../../api/taskpilot";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function Planner() {
+  const isMobile = useIsMobile();
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,7 +141,8 @@ export function Planner() {
             </button>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8 }}>
+        <div style={{ overflowX: isMobile ? "auto" : "visible" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(7, 110px)" : "repeat(7, 1fr)", gap: 8 }}>
           {weekDays.map((day) => {
             const dayTasks = getTasksForDay(day.dateStr);
             return (
@@ -178,6 +181,7 @@ export function Planner() {
               </div>
             );
           })}
+        </div>
         </div>
       </Card>
 

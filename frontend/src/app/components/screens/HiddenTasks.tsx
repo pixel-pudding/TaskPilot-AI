@@ -5,6 +5,7 @@ import { getRecentExtractions, injectTask, convertHiddenTask, ExtractionItem } f
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 function ConfidenceBar({ value }: { value: number }) {
   const pct = Math.round(value * 100);
@@ -190,6 +191,7 @@ function HiddenTaskCard({ item, onApproved }: { item: ExtractionItem; onApproved
 }
 
 export function HiddenTasks() {
+  const isMobile = useIsMobile();
   const [extractions, setExtractions] = useState<ExtractionItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -225,7 +227,7 @@ export function HiddenTasks() {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 14 }}>
         <Card variant="green" shadow>
           <div style={{ fontSize: 11, color: "#7A7A7A", fontFamily: "'IBM Plex Mono', monospace", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6 }}>Total Found</div>
           <div style={{ fontSize: 28, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>{total}</div>

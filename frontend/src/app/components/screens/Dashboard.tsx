@@ -24,6 +24,7 @@ import {
   Task
 } from "../../api/taskpilot";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 // ── Typing animation hook ────────────────────────────────────────────────────
 function useTyping(phrases: string[], speed = 55, pause = 2200) {
@@ -205,6 +206,7 @@ function ScoreBar({ label, value, max = 100, color }: { label: string; value: nu
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 export function Dashboard() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [dashboard, setDashboard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -472,7 +474,7 @@ export function Dashboard() {
       )}
 
       {/* ── KPI Row ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 10 : 14 }}>
         <KPI
           icon={<BarChart3 size={16} />} label="Active Tasks"
           value={allRanked.length} sub="tracked across sources" variant="blue"
@@ -496,7 +498,7 @@ export function Dashboard() {
       </div>
 
       {/* ── Main layout ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 310px", gap: 18, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 310px", gap: 18, alignItems: "start" }}>
 
         {/* ── Left column ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

@@ -60,6 +60,7 @@ function FloatingAIBtn() {
 
 function LayoutInner({ children }: { children: ReactNode }) {
   useKeyboardShortcuts();
+  const { isMobile } = useLayout();
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window !== "undefined") return (localStorage.getItem("theme") as "light" | "dark") || "light";
     return "light";
@@ -77,10 +78,14 @@ function LayoutInner({ children }: { children: ReactNode }) {
         overflow: "hidden", background: "var(--bg-primary, #F6F2E9)", position: "relative",
       }}>
         <Sidebar />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* min-width: 0 — without it, a flex child never shrinks below its
+            content's intrinsic width, so any wide grid/table inside would
+            silently push this column (and the page) wider than the
+            viewport instead of scrolling within it. */}
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <TopNav />
           <main style={{ flex: 1, overflow: "auto", display: "flex" }}>
-            <div style={{ flex: 1, overflow: "auto", padding: "24px 28px" }}>
+            <div style={{ flex: 1, minWidth: 0, overflow: "auto", padding: isMobile ? "14px 12px" : "24px 28px" }}>
               {children}
             </div>
             <RightPanel />

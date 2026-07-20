@@ -3,6 +3,7 @@ import { BarChart3, TrendingUp, Activity, Users, RefreshCw, Clock, Zap, Copy, Ch
 import { Card } from "../shared/Card";
 import { getDashboard, getWeeklySummary, getTeamMetrics, getMetrics, WebSocketEvent } from "../../api/taskpilot";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { useIsMobile } from "../../hooks/useIsMobile";
 import { BarChart, Bar, PieChart, Pie, Cell, ComposedChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const TOOLTIP_STYLE = { contentStyle: { background: "#FFFDF8", border: "1px solid #E9E4D8", borderRadius: 12, fontSize: 12 } };
@@ -39,6 +40,7 @@ function StatRow({ label, value, highlight }: { label: string; value: string | n
 }
 
 export function Reports() {
+  const isMobile = useIsMobile();
   const [db, setDb] = useState<any>(null);
   const [weekly, setWeekly] = useState<string>("");
   const [team, setTeam] = useState<any>(null);
@@ -177,14 +179,14 @@ export function Reports() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 14 }}>
         <KpiCard icon={<Database size={16} color="#7A7A7A" />} label="Total Tasks" value={String(totalTasks)} sub="Across all sources" variant="green" />
         <KpiCard icon={<Cpu size={16} color="#7A7A7A" />} label="Avg Latency" value={metrics?.api_latency?.avg_latency_ms ? `${metrics.api_latency.avg_latency_ms.toFixed(0)}ms` : "--"} sub="Last hour API calls" variant="blue" />
         <KpiCard icon={<Activity size={16} color="#7A7A7A" />} label="API Calls" value={String(metrics?.api_latency?.total_calls ?? 0)} sub="In the last hour" variant="pink" />
         <KpiCard icon={<Users size={16} color="#7A7A7A" />} label="Teams" value={String(Object.keys(teams).length || "--")} sub={`${teamChartData.reduce((s, t) => s + t.total, 0)} total tasks`} variant="yellow" />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
         <Card variant="purple" shadow style={{ maxHeight: 280, overflow: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
             <Zap size={14} /> <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif" }}>Weekly Summary</span>
@@ -239,7 +241,7 @@ export function Reports() {
       </div>
 
       {chartData.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
           <Card shadow>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
               <TrendingUp size={14} /> <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif" }}>Completion Rate</span>
@@ -282,7 +284,7 @@ export function Reports() {
       )}
 
       {(sourceData.length > 0 || ingestionChartData.length > 0) && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
           {sourceData.length > 0 && (
             <Card shadow>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
@@ -345,7 +347,7 @@ export function Reports() {
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
             <Clock size={14} /> <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif" }}>Peak Completion Times</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 8 }}>
             {peakPatterns.slice(0, 8).map((p: any, i: number) => {
               const maxCount = Math.max(...peakPatterns.map((x: any) => x.count));
               const intensity = maxCount > 0 ? p.count / maxCount : 0;
@@ -384,7 +386,7 @@ export function Reports() {
         </Card>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
         <Card variant="blue" shadow>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
             <Users size={14} /> <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif" }}>Team Breakdown</span>
@@ -411,7 +413,7 @@ export function Reports() {
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
             <Cpu size={14} /> <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif" }}>System Health</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
             <div style={{ background: "#F6F2E9", borderRadius: 12, padding: "12px" }}>
               <div style={{ fontSize: 10, color: "#7A7A7A", fontFamily: "'IBM Plex Mono', monospace", marginBottom: 4 }}>PLAN STATUS</div>
               <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: metrics?.has_plan ? CHART_GREEN : "#7A7A7A" }}>{metrics?.has_plan ? "Active" : "None"}</div>

@@ -4,11 +4,13 @@ import { Card } from "../shared/Card";
 import { PriorityPill } from "../shared/PriorityPill";
 import { SourceBadge } from "../shared/SourceBadge";
 import { getTasks, getCalendarToday, CalendarEvent } from "../../api/taskpilot";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function Timeline() {
+  const isMobile = useIsMobile();
   const [tasks, setTasks] = useState<any[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +89,7 @@ export function Timeline() {
         </div>
       </Card>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
         <Card variant="blue" shadow>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
             <Calendar size={14} /> <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif" }}>Today's Tasks</span>

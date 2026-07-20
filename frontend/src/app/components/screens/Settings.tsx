@@ -3,6 +3,7 @@ import { User, Shield, Bell, Palette, Key, Smartphone, Sun, Moon, Keyboard } fro
 import { Card } from "../shared/Card";
 import { getMemoryPreferences, getHealth } from "../../api/taskpilot";
 import { useAuth } from "../../context/AuthContext";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 const SETTINGS_SECTIONS = [
   { id: "profile", label: "Profile", icon: User },
@@ -16,6 +17,7 @@ const SETTINGS_SECTIONS = [
 ];
 
 export function Settings() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [activeSection, setActiveSection] = useState("preferences");
   const [prefs, setPrefs] = useState<Record<string, string>>({});
@@ -37,7 +39,7 @@ export function Settings() {
         <p style={{ color: "#7A7A7A", fontSize: 13, marginTop: 4 }}>Manage your account and preferences</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "200px 1fr", gap: 16 }}>
         <Card shadow style={{ padding: 8 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {SETTINGS_SECTIONS.map(section => {
@@ -171,7 +173,7 @@ export function Settings() {
                     <div style={{ fontSize: 12, color: "#7A7A7A" }}>{user?.email ?? "—"}</div>
                   </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
                   {[
                     { label: "Display Name", value: user?.name || "—" },
                     { label: "Email", value: user?.email ?? "—" },

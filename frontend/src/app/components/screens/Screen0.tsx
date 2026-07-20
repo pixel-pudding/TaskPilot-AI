@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Sparkles, Zap, GitBranch, BarChart3, Puzzle, Inbox, CalendarRange } from "lucide-react";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 // ── Typing animation ──────────────────────────────────────────────────────────
 function useTyping(phrases: string[], speed = 52, pause = 2000) {
@@ -178,6 +179,7 @@ const STATS = [
 ];
 
 export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () => void }) {
+  const isMobile = useIsMobile();
   const typed = useTyping([
     "ranking your tasks by impact",
     "monitoring 6 live integrations",
@@ -194,6 +196,16 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
     el.addEventListener("scroll", handler);
     return () => el.removeEventListener("scroll", handler);
   }, []);
+
+  const NAV_LINKS = [
+    { label: "Features", id: "features" },
+    { label: "How it Works", id: "how-it-works" },
+    { label: "Stats", id: "stats" },
+  ] as const;
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className="landing-scroll" style={{
@@ -222,7 +234,7 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
       <div className="nav-blur" style={{
         position: "sticky", top: 0, zIndex: 100,
         borderBottom: "1px solid rgba(233,228,216,0.7)",
-        padding: "14px 40px",
+        padding: isMobile ? "12px 16px" : "14px 40px",
         background: scrolled ? "rgba(246,242,233,0.88)" : "rgba(246,242,233,0.6)",
         display: "flex", alignItems: "center", justifyContent: "space-between",
         transition: "background 0.3s",
@@ -230,33 +242,34 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
             width: 34, height: 34, borderRadius: 10, background: "#0D0D0D",
-            display: "flex", alignItems: "center", justifyContent: "center",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
             <Sparkles size={16} color="#FFFFFF" />
           </div>
           <span style={{ fontWeight: 700, fontSize: 18, fontFamily: "'Space Grotesk', sans-serif", color: "#0D0D0D" }}>TaskPilot</span>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {(["Features", "How it Works", "Stats"] as const).map(l => (
-            <button key={l} style={{ background: "none", border: "none", padding: "8px 14px", fontSize: 13, color: "#7A7A7A", cursor: "pointer", borderRadius: 10, fontFamily: "'Inter', sans-serif" }}
+          {!isMobile && NAV_LINKS.map(l => (
+            <button key={l.id} onClick={() => scrollToSection(l.id)}
+              style={{ background: "none", border: "none", padding: "8px 14px", fontSize: 13, color: "#7A7A7A", cursor: "pointer", borderRadius: 10, fontFamily: "'Inter', sans-serif" }}
               onMouseEnter={e => (e.currentTarget.style.color = "#0D0D0D")}
               onMouseLeave={e => (e.currentTarget.style.color = "#7A7A7A")}
-            >{l}</button>
+            >{l.label}</button>
           ))}
           <button className="cta-primary" onClick={onStart} style={{
             background: "#0D0D0D", color: "#FFFFFF", border: "none",
-            padding: "10px 22px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer",
-            display: "flex", alignItems: "center", gap: 7, fontFamily: "'Space Grotesk', sans-serif",
+            padding: isMobile ? "9px 14px" : "10px 22px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 7, fontFamily: "'Space Grotesk', sans-serif", whiteSpace: "nowrap",
           }}>
-            Get Started <ArrowRight size={13} />
+            {isMobile ? "Start" : "Get Started"} <ArrowRight size={13} />
           </button>
         </div>
       </div>
 
       {/* ── Hero ── */}
-      <div style={{ position: "relative", overflow: "hidden", padding: "80px 40px 60px", maxWidth: 1140, margin: "0 auto" }}>
+      <div style={{ position: "relative", overflow: "hidden", padding: isMobile ? "40px 16px 36px" : "80px 40px 60px", maxWidth: 1140, margin: "0 auto" }}>
         <ParticleField />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 440px", gap: 64, alignItems: "center", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 440px", gap: isMobile ? 36 : 64, alignItems: "center", position: "relative", zIndex: 1 }}>
           {/* Left */}
           <div style={{ animation: "fadeUp 0.6s ease both" }}>
             <div style={{
@@ -270,7 +283,7 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
             </div>
 
             <h1 style={{
-              fontSize: 54, margin: "0 0 20px", lineHeight: 1.08,
+              fontSize: isMobile ? 34 : 54, margin: "0 0 20px", lineHeight: 1.1,
               fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, color: "#0D0D0D",
               letterSpacing: "-0.02em",
             }}>
@@ -322,27 +335,32 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
           {/* Right: Live preview */}
           <div style={{ animation: "fadeUp 0.7s 0.15s ease both", position: "relative" }}>
             {/* Floating badges */}
-            <FloatBadge style={{ position: "absolute", top: -20, right: -24, animation: "float 3.5s ease-in-out infinite", zIndex: 2 }}>
-              <Zap size={13} color="#F97316" /> AI saved you 4.2h today
-            </FloatBadge>
-            <FloatBadge style={{ position: "absolute", bottom: 30, left: -36, animation: "float 4s 1s ease-in-out infinite", zIndex: 2 }}>
-              <span style={{ width: 7, height: 7, background: "#22863a", borderRadius: "50%", flexShrink: 0 }} /> 6 sources synced
-            </FloatBadge>
+            {!isMobile && (
+              <>
+                <FloatBadge style={{ position: "absolute", top: -20, right: -24, animation: "float 3.5s ease-in-out infinite", zIndex: 2 }}>
+                  <Zap size={13} color="#F97316" /> AI saved you 4.2h today
+                </FloatBadge>
+                <FloatBadge style={{ position: "absolute", bottom: 30, left: -36, animation: "float 4s 1s ease-in-out infinite", zIndex: 2 }}>
+                  <span style={{ width: 7, height: 7, background: "#22863a", borderRadius: "50%", flexShrink: 0 }} /> 6 sources synced
+                </FloatBadge>
+              </>
+            )}
             <LivePreview />
           </div>
         </div>
       </div>
 
       {/* ── Stats strip ── */}
-      <div style={{
+      <div id="stats" style={{
         borderTop: "1px solid #E9E4D8", borderBottom: "1px solid #E9E4D8",
-        background: "#FFFFFF", padding: "32px 40px",
+        background: "#FFFFFF", padding: isMobile ? "24px 16px" : "32px 40px",
+        scrollMarginTop: 70,
       }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 0 }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: isMobile ? 20 : 0 }}>
           {STATS.map((s, i) => (
             <div key={s.label} className="stat-item" style={{
-              textAlign: "center", padding: "0 24px",
-              borderRight: i < 3 ? "1px solid #E9E4D8" : "none",
+              textAlign: "center", padding: isMobile ? 0 : "0 24px",
+              borderRight: !isMobile && i < 3 ? "1px solid #E9E4D8" : "none",
             }}>
               <div className="stat-value" style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 36, fontWeight: 800, color: "#0D0D0D", lineHeight: 1 }}>{s.value}</div>
               <div style={{ fontSize: 12, color: "#8A8478", marginTop: 6, fontFamily: "'IBM Plex Mono', monospace" }}>{s.label}</div>
@@ -352,13 +370,13 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
       </div>
 
       {/* ── Problem section ── */}
-      <div style={{ padding: "72px 40px", maxWidth: 1100, margin: "0 auto" }}>
+      <div style={{ padding: isMobile ? "48px 16px" : "72px 40px", maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 44 }}>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#B0A8A0", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>the problem</div>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 38, fontWeight: 800, margin: "0 0 14px", color: "#0D0D0D", letterSpacing: "-0.01em" }}>Engineers lose 4+ hours a week</h2>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: isMobile ? 28 : 38, fontWeight: 800, margin: "0 0 14px", color: "#0D0D0D", letterSpacing: "-0.01em" }}>Engineers lose 4+ hours a week</h2>
           <p style={{ color: "#8A8478", fontSize: 15, maxWidth: 460, margin: "0 auto" }}>just figuring out what to work on — not actually working.</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4,1fr)", gap: 14 }}>
           {[
             { emoji: "🔄", label: "Context Switching", desc: "Jumping between 6+ tools to find what matters next.", color: "#F7C5E6" },
             { emoji: "👻", label: "Hidden Tasks", desc: "Action items buried in emails, Slack threads, and meeting notes.", color: "#DCC7F7" },
@@ -379,12 +397,12 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
       </div>
 
       {/* ── Features ── */}
-      <div style={{ padding: "0 40px 72px", maxWidth: 1100, margin: "0 auto" }}>
+      <div id="features" style={{ padding: isMobile ? "0 16px 48px" : "0 40px 72px", maxWidth: 1100, margin: "0 auto", scrollMarginTop: 70 }}>
         <div style={{ textAlign: "center", marginBottom: 44 }}>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#B0A8A0", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>the solution</div>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 38, fontWeight: 800, margin: "0 0 14px", color: "#0D0D0D", letterSpacing: "-0.01em" }}>Everything in one place</h2>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: isMobile ? 28 : 38, fontWeight: 800, margin: "0 0 14px", color: "#0D0D0D", letterSpacing: "-0.01em" }}>Everything in one place</h2>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 14 }}>
           {FEATURES.map((f, i) => {
             const Icon = f.icon;
             return (
@@ -407,15 +425,15 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
       </div>
 
       {/* ── How it works ── */}
-      <div style={{ background: "#0D0D0D", padding: "72px 40px" }}>
+      <div id="how-it-works" style={{ background: "#0D0D0D", padding: isMobile ? "48px 16px" : "72px 40px", scrollMarginTop: 70 }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 52 }}>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#5A5A5A", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>how it works</div>
-            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 36, fontWeight: 800, margin: 0, color: "#F6F2E9", letterSpacing: "-0.01em" }}>From chaos to clarity in seconds</h2>
+            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: isMobile ? 26 : 36, fontWeight: 800, margin: 0, color: "#F6F2E9", letterSpacing: "-0.01em" }}>From chaos to clarity in seconds</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 0, position: "relative" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4,1fr)", gap: isMobile ? 32 : 0, position: "relative" }}>
             {/* connector line */}
-            <div style={{ position: "absolute", top: 22, left: "12.5%", right: "12.5%", height: 1, background: "rgba(255,255,255,0.12)", zIndex: 0 }} />
+            {!isMobile && <div style={{ position: "absolute", top: 22, left: "12.5%", right: "12.5%", height: 1, background: "rgba(255,255,255,0.12)", zIndex: 0 }} />}
             {[
               { step: "01", label: "Connect Sources", desc: "Link Jira, GitHub, Slack, Outlook in 2 minutes.", color: "#F7C5E6" },
               { step: "02", label: "AI Understands", desc: "Extracts and deduplicates tasks across all sources.", color: "#DCC7F7" },
@@ -438,9 +456,9 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
       </div>
 
       {/* ── CTA ── */}
-      <div style={{ padding: "80px 40px", textAlign: "center" }}>
+      <div style={{ padding: isMobile ? "56px 16px" : "80px 40px", textAlign: "center" }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
-          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 42, fontWeight: 800, margin: "0 0 18px", color: "#0D0D0D", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: isMobile ? 30 : 42, fontWeight: 800, margin: "0 0 18px", color: "#0D0D0D", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
             Stop guessing.<br />Start shipping.
           </h2>
           <p style={{ color: "#8A8478", fontSize: 15, margin: "0 0 36px", lineHeight: 1.6 }}>
@@ -448,7 +466,7 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
           </p>
           <button className="cta-primary" onClick={onStart} style={{
             background: "#0D0D0D", color: "#FFFFFF", border: "none",
-            padding: "18px 48px", borderRadius: 18, fontSize: 16, fontWeight: 700,
+            padding: isMobile ? "16px 36px" : "18px 48px", borderRadius: 18, fontSize: 16, fontWeight: 700,
             cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 10,
             fontFamily: "'Space Grotesk', sans-serif",
           }}>
@@ -458,7 +476,13 @@ export function Screen0({ onStart, onDemo }: { onStart: () => void; onDemo: () =
       </div>
 
       {/* ── Footer ── */}
-      <div style={{ borderTop: "1px solid #E9E4D8", padding: "24px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", color: "#B0A8A0", fontSize: 12, fontFamily: "'IBM Plex Mono', monospace" }}>
+      <div style={{
+        borderTop: "1px solid #E9E4D8", padding: isMobile ? "20px 16px" : "24px 40px",
+        display: "flex", flexWrap: "wrap", gap: 8,
+        justifyContent: isMobile ? "center" : "space-between", alignItems: "center",
+        textAlign: isMobile ? "center" : "left",
+        color: "#B0A8A0", fontSize: 12, fontFamily: "'IBM Plex Mono', monospace",
+      }}>
         <span>© {new Date().getFullYear()} TaskPilot AI</span>
         <span>Built for engineers who deserve better tooling.</span>
       </div>
