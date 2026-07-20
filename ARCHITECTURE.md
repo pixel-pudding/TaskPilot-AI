@@ -125,14 +125,18 @@ Scoring uses 7 factors with weighted formula (no LLM in critical path):
 ```mermaid
 graph LR
     subgraph "Production Deployment"
-        NGINX[Nginx] --> BACKEND[FastAPI x2]
+        NGINX[Nginx] --> BACKEND[FastAPI - single worker]
         BACKEND --> POSTGRES[(PostgreSQL)]
-        BACKEND --> REDIS[(Redis)]
-        BACKEND --> CELERY[Celery Worker]
-        CELERY --> REDIS
+        BACKEND --> REDIS[(Redis - caching)]
         NGINX --> FRONTEND[React Static]
     end
 ```
+
+Note: the backend runs as a single worker process by design — per-user task/plan
+state lives in an in-process dict (`core/state.py`) with no shared cache backing
+it, so multiple instances would each hold their own inconsistent copy. Background
+work (source syncing, staleness checks, alerts) runs as `asyncio` tasks inside
+that same process, not as a separate worker pool.
 
 ## Key Design Decisions
 
@@ -142,7 +146,7 @@ graph LR
 | **Hybrid deduplication** | Pure embedding may miss exact ID matches. Pure rules may miss semantic duplicates. Hybrid catches both. |
 | **WebSocket for real-time** | Polling would add latency and load. WebSocket enables instant push of plan updates, alerts. |
 | **SQLite for dev / PostgreSQL for prod** | Zero-config for development; ACID compliance & concurrency for production. |
-| **Celery for background tasks** | Long-running pipeline must not block API. Worker pool processes asynchronously. |
+| **In-process asyncio for background tasks** | Source syncing, staleness checks, and alerts run as background `asyncio` tasks in the same process — no separate worker pool to keep in sync with the in-memory state. |
 | **Prometheus + Grafana** | Industry standard for metrics collection and visualization. |
 
 ## Model Selection

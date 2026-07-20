@@ -23,14 +23,26 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/connections", tags=["connections"])
 
-# Only ever redirect back to a local dev origin or the configured frontend —
-# `origin` arrives as attacker-controllable query input, so it must be
-# allowlisted rather than trusted outright (open-redirect guard).
+# Only ever redirect back to a local dev origin or an explicitly allowlisted
+# one — `origin` arrives as attacker-controllable query input, so it must be
+# allowlisted rather than trusted outright (open-redirect guard). Production
+# origins (e.g. a Vercel frontend) go in settings.additional_allowed_origins
+# rather than here, so deploying to a new domain is a config change, not a
+# code change.
 _SAFE_ORIGIN_RE = re.compile(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$")
 
 
 def _safe_origin(origin: str | None) -> str | None:
-    if origin and _SAFE_ORIGIN_RE.match(origin):
+    if not origin:
+        return None
+    if _SAFE_ORIGIN_RE.match(origin):
+        return origin
+    allowed = {
+        o.strip().rstrip("/")
+        for o in settings.additional_allowed_origins.split(",")
+        if o.strip()
+    }
+    if origin.rstrip("/") in allowed:
         return origin
     return None
 

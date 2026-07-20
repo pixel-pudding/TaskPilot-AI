@@ -43,7 +43,13 @@ async def lifespan(app: FastAPI):
     try:
         await init_db()
     except Exception:
-        logger.warning("Async DB init failed, using sync fallback")
+        # This used to swallow the real exception entirely (just a generic
+        # warning, no traceback) — meaning a real Postgres init failure in
+        # production looked identical to "nothing happened," and the app
+        # would silently fall back to a throwaway local SQLite file while
+        # every other code path kept talking to the (still-empty) Postgres
+        # database via AsyncSessionLocal. Log the actual cause.
+        logger.exception("Async DB init failed, using sync fallback")
         state.init_db()
 
     try:

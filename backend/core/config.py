@@ -48,16 +48,17 @@ class Settings(BaseSettings):
     oauth_redirect_base_url: str = "http://localhost:8000"
     frontend_url: str = "http://localhost:5173"
     credentials_encryption_key: str = ""
+    # Comma-separated extra origins allowed as an OAuth-flow return target,
+    # beyond the always-allowed localhost/127.0.0.1 (dev). Set this to your
+    # real frontend origin(s) in production, e.g.
+    # "https://taskpilot.vercel.app,https://taskpilot-git-main.vercel.app"
+    additional_allowed_origins: str = ""
 
     # ── Database ──
     database_url: str = "sqlite+aiosqlite:///db/taskpilot.db"
 
     # ── Redis ──
     redis_url: str = "redis://localhost:6379/0"
-
-    # ── Celery ──
-    celery_broker_url: str = "redis://localhost:6379/1"
-    celery_result_backend: str = "redis://localhost:6379/2"
 
     # ── Security ──
     secret_key: str = "change-me-to-a-random-secret-at-least-32-chars"

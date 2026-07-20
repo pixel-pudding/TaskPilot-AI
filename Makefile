@@ -13,9 +13,6 @@ dev-backend:
 dev-frontend:
 	@cd frontend && npm run dev
 
-dev-celery:
-	@cd backend && celery -A celery_app worker --loglevel=info --concurrency=2
-
 # ── Build ──
 build:
 	@cd frontend && npm install && npm run build
@@ -80,7 +77,6 @@ help:
 	@echo "make dev            Start all dev servers"
 	@echo "make dev-backend    Start backend only"
 	@echo "make dev-frontend   Start frontend only"
-	@echo "make dev-celery     Start Celery worker"
 	@echo "make test           Run all tests"
 	@echo "make test-coverage  Run tests with coverage"
 	@echo "make test-e2e       Run demo validation"

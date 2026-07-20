@@ -48,6 +48,7 @@ function Landing() {
   const { user, loading, demoLogin } = useAuth();
   const navigate = useNavigate();
   const [demoBusy, setDemoBusy] = useState(false);
+  const [demoError, setDemoError] = useState<string | null>(null);
 
   if (loading) return null;
   if (user) return <Navigate to="/dashboard" replace />;
@@ -55,19 +56,40 @@ function Landing() {
   const handleDemo = async () => {
     if (demoBusy) return;
     setDemoBusy(true);
+    setDemoError(null);
     try {
       await demoLogin();
       navigate("/dashboard", { replace: true });
-    } catch {
+    } catch (err: any) {
+      // Swallowing this silently used to mean the button just looked
+      // broken — no navigation, no error, nothing — when e.g. the backend
+      // URL wasn't reachable. Surface exactly what happened instead.
+      setDemoError(
+        err?.message
+          ? `Couldn't start the demo: ${err.message}`
+          : "Couldn't start the demo. Please try again."
+      );
       setDemoBusy(false);
     }
   };
 
   return (
-    <Screen0
-      onStart={() => { window.location.href = "/signup"; }}
-      onDemo={handleDemo}
-    />
+    <>
+      {demoError && (
+        <div style={{
+          position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)",
+          zIndex: 1000, background: "#FBE4E4", color: "#B23B3B",
+          border: "1px solid #F0A8D6", borderRadius: 12, padding: "10px 18px",
+          fontSize: 13, boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+        }}>
+          {demoError}
+        </div>
+      )}
+      <Screen0
+        onStart={() => navigate("/signup")}
+        onDemo={handleDemo}
+      />
+    </>
   );
 }
 

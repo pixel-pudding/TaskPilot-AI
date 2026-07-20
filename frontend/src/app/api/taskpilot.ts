@@ -208,7 +208,11 @@ export type WebSocketEvent = {
   data: unknown;
 };
 
-const API_BASE = "";
+// Same-origin by default (frontend + backend served together, e.g. behind
+// the nginx proxy in docker-compose — relative "/api/..." paths just work).
+// Set VITE_API_BASE_URL when frontend and backend are on different origins
+// (e.g. a Vercel-hosted frontend calling a Railway/Render-hosted backend).
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") || "";
 
 const TOKEN_STORAGE_KEY = "taskpilot_token";
 
@@ -387,9 +391,18 @@ function _startWs(): void {
   if (_sharedWs && (_sharedWs.readyState === WebSocket.OPEN || _sharedWs.readyState === WebSocket.CONNECTING)) {
     return;
   }
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const token = getToken();
-  const wsUrl = `${protocol}//${window.location.host}/ws${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+  // Same-origin default: derive ws(s):// from the page's own host. Once
+  // API_BASE points at a different origin (split Vercel/Railway deploy),
+  // the socket has to follow it there instead — window.location.host would
+  // silently point the WS connection at the frontend's own host, which
+  // isn't listening for WebSocket upgrades at all.
+  let wsOrigin = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
+  if (API_BASE) {
+    const apiUrl = new URL(API_BASE);
+    wsOrigin = `${apiUrl.protocol === "https:" ? "wss:" : "ws:"}//${apiUrl.host}`;
+  }
+  const wsUrl = `${wsOrigin}/ws${token ? `?token=${encodeURIComponent(token)}` : ""}`;
   const ws = new WebSocket(wsUrl);
   _sharedWs = ws;
 

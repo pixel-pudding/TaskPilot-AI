@@ -14,9 +14,8 @@ psycopg2-binary>=2.9.0
 alembic>=1.13.0
 aiosqlite>=0.20.0
 
-# Caching & Queue
+# Caching
 redis>=5.0.0
-celery>=5.4.0
 
 # ML / NLP
 sentence-transformers>=3.0.0
